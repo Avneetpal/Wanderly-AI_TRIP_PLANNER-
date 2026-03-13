@@ -14,7 +14,7 @@ client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
 
 class TravelPlanner:
     def __init__(self):
-        self.model = "llama-3.1-70b-versatile"
+        self.model = "llama-3.3-70b-versatile"
     
     def _call(self, prompt):
         """Call Groq API with error handling"""
