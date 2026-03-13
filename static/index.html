@@ -1,0 +1,430 @@
+import os
+os.makedirs('static', exist_ok=True)
+
+# STARTUP-QUALITY UI with consistent colors and professional design
+html = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wanderly - Smart Travel Planning</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+        body { background:#F8F9FA; }
+
+        /* Header with Home button */
+        .header { background:white; padding:16px 40px; box-shadow:0 1px 3px rgba(0,0,0,0.08); position:sticky; top:0; z-index:100; }
+        .header-content { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; }
+        .logo { font-size:24px; font-weight:700; color:#FF9F68; cursor:pointer; }
+        .home-btn { background:#A2D9FF; color:white; border:none; padding:10px 24px; border-radius:8px; font-weight:600; cursor:pointer; display:none; }
+        .home-btn:hover { background:#8CC9EF; }
+
+        /* Landing */
+        .landing { min-height:100vh; background:linear-gradient(135deg, #FF9F68 0%, #FFA978 50%, #A2D9FF 100%); display:flex; align-items:center; justify-content:center; }
+        .landing-content { text-align:center; color:white; max-width:700px; padding:40px; }
+        .landing-content h1 { font-size:4.5rem; font-weight:800; margin-bottom:24px; text-shadow:0 2px 20px rgba(0,0,0,0.1); }
+        .landing-content p { font-size:1.6rem; margin-bottom:48px; opacity:0.95; }
+        .start-btn { background:white; color:#FF9F68; border:none; padding:20px 60px; font-size:1.4rem; font-weight:700; border-radius:50px; cursor:pointer; box-shadow:0 10px 30px rgba(0,0,0,0.2); transition:transform 0.2s; }
+        .start-btn:hover { transform:scale(1.05); }
+
+        /* Form */
+        .form-page { display:none; min-height:100vh; background:linear-gradient(to bottom, #FFF5F0 0%, #E6F7FF 100%); padding:60px 20px; }
+        .form-container { max-width:700px; margin:0 auto; background:white; border-radius:20px; padding:50px; box-shadow:0 10px 40px rgba(0,0,0,0.1); }
+        .form-header { text-align:center; margin-bottom:40px; }
+        .form-header h2 { font-size:2.8rem; color:#333; margin-bottom:12px; background:linear-gradient(135deg, #FF9F68, #A2D9FF); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .form-header p { color:#666; font-size:1.2rem; }
+
+        .form-group { margin-bottom:28px; }
+        .form-group label { display:block; margin-bottom:10px; font-weight:600; color:#333; font-size:15px; }
+        .form-group input { width:100%; padding:16px; border:2px solid #E8E8E8; border-radius:12px; font-size:16px; transition:all 0.2s; }
+        .form-group input:focus { border-color:#FF9F68; outline:none; box-shadow:0 0 0 3px rgba(255,159,104,0.1); }
+
+        .style-options { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+        .style-option { border:3px solid #E8E8E8; border-radius:16px; padding:24px; text-align:center; cursor:pointer; transition:all 0.3s; background:white; }
+        .style-option:hover { transform:translateY(-4px); box-shadow:0 8px 20px rgba(0,0,0,0.1); }
+        .style-option.active { border-color:#FF9F68; background:linear-gradient(135deg, #FFF5F0, #FFE8DC); box-shadow:0 8px 20px rgba(255,159,104,0.2); }
+        .style-icon { width:48px; height:48px; margin:0 auto 12px; }
+        .style-name { font-weight:700; color:#333; font-size:16px; }
+
+        .submit-btn { width:100%; padding:20px; background:linear-gradient(135deg, #FF9F68, #FFA978); color:white; border:none; border-radius:12px; font-size:18px; font-weight:700; cursor:pointer; margin-top:12px; box-shadow:0 4px 15px rgba(255,159,104,0.3); }
+        .submit-btn:hover { box-shadow:0 6px 20px rgba(255,159,104,0.4); }
+
+        /* Loading */
+        .loading { display:none; min-height:100vh; background:linear-gradient(to bottom, #FFF5F0, #E6F7FF); padding:100px 20px; text-align:center; }
+        .spinner { border:5px solid #E8E8E8; border-top:5px solid #FF9F68; border-radius:50%; width:60px; height:60px; animation:spin 1s linear infinite; margin:0 auto 30px; }
+        @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+
+        /* Results */
+        .results { display:none; background:linear-gradient(to bottom, #FFF5F0, #E6F7FF); min-height:100vh; padding:40px 20px; }
+        .results.show { display:block; }
+        .results-container { max-width:1200px; margin:0 auto; }
+        .results-header { text-align:center; margin-bottom:50px; background:white; padding:40px; border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,0.08); }
+        .results-header h2 { font-size:2.8rem; color:#333; margin-bottom:12px; }
+        .results-header p { color:#666; font-size:1.2rem; }
+
+        .section { margin-bottom:50px; }
+        .section-title { font-size:2rem; font-weight:700; color:#333; margin-bottom:24px; padding-left:8px; border-left:5px solid #FF9F68; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:24px; }
+
+        .card { background:white; border-radius:16px; padding:28px; box-shadow:0 4px 15px rgba(0,0,0,0.08); transition:transform 0.2s; }
+        .card:hover { transform:translateY(-4px); box-shadow:0 8px 25px rgba(0,0,0,0.12); }
+        .card-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:16px; }
+        .card-title { font-size:1.3rem; font-weight:700; color:#333; }
+        .card-price { background:linear-gradient(135deg, #FF9F68, #FFA978); color:white; padding:8px 16px; border-radius:10px; font-weight:700; font-size:14px; }
+        .card-detail { color:#666; font-size:14px; margin:8px 0; }
+
+        .amenities { display:flex; gap:20px; margin-top:20px; padding-top:20px; border-top:2px solid #F5F5F5; }
+        .amenity { display:flex; flex-direction:column; align-items:center; gap:6px; font-size:13px; color:#666; font-weight:600; }
+        .amenity-icon { font-size:22px; }
+
+        .tag { display:inline-block; background:linear-gradient(135deg, #FFF5F0, #FFE8DC); color:#FF9F68; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; margin-bottom:12px; }
+
+        /* Transport Section */
+        .transport-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
+        .transport-card { background:white; border-radius:16px; padding:28px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.08); border-top:4px solid #A2D9FF; }
+        .transport-icon { font-size:42px; margin-bottom:12px; }
+        .transport-name { font-weight:700; color:#333; font-size:16px; margin-bottom:8px; }
+        .transport-cost { color:#FF9F68; font-weight:700; font-size:18px; }
+        .transport-detail { color:#666; font-size:13px; margin-top:6px; }
+
+        /* Itinerary */
+        .itinerary { background:white; border-radius:16px; padding:40px; box-shadow:0 4px 15px rgba(0,0,0,0.08); }
+        .day-section { margin-bottom:40px; padding-bottom:40px; border-bottom:2px solid #F5F5F5; }
+        .day-section:last-child { border-bottom:none; }
+        .day-badge { background:linear-gradient(135deg, #A2D9FF, #8CC9EF); color:white; padding:10px 24px; border-radius:25px; font-weight:700; font-size:16px; margin-bottom:24px; display:inline-block; }
+        .timeline-item { display:grid; grid-template-columns:120px 1fr; gap:20px; margin-bottom:20px; }
+        .timeline-time { color:#A2D9FF; font-weight:700; font-size:15px; }
+        .timeline-content { background:linear-gradient(to right, #F8F9FA, white); padding:20px; border-radius:12px; border-left:3px solid #FF9F68; }
+        .timeline-title { font-weight:700; color:#333; font-size:16px; margin-bottom:6px; }
+        .timeline-detail { color:#666; font-size:14px; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo" onclick="goHome()">Wanderly</div>
+            <button class="home-btn" id="homeBtn" onclick="goHome()">🏠 Home</button>
+        </div>
+    </div>
+
+    <!-- Landing -->
+    <div class="landing" id="landing">
+        <div class="landing-content">
+            <h1>Wanderly</h1>
+            <p>Your perfect trip, planned in minutes</p>
+            <button class="start-btn" onclick="showForm()">Start Planning</button>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="form-page" id="formPage">
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Plan Your Adventure</h2>
+                <p>Tell us where you want to go</p>
+            </div>
+
+            <form onsubmit="planTrip(event)">
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" id="city" placeholder="Paris, Tokyo, Dubai..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Country</label>
+                    <input type="text" id="country" placeholder="France, Japan, UAE..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Total Budget (₹)</label>
+                    <input type="number" id="budget" placeholder="50000" min="5000" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Days</label>
+                    <input type="number" id="days" value="5" min="1" max="30" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Travelers</label>
+                    <input type="number" id="travelers" value="2" min="1" max="20" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Travel Style</label>
+                    <div class="style-options">
+                        <div class="style-option" onclick="selectStyle('budget')">
+                            <svg class="style-icon" viewBox="0 0 48 48" fill="none"><path d="M24 8L8 16L24 24L40 16L24 8Z" fill="#FF9F68"/><path d="M8 24L24 32L40 24" stroke="#FF9F68" stroke-width="3"/><path d="M8 32L24 40L40 32" stroke="#FF9F68" stroke-width="3"/></svg>
+                            <div class="style-name">Budget</div>
+                        </div>
+                        <div class="style-option active" onclick="selectStyle('balanced')">
+                            <svg class="style-icon" viewBox="0 0 48 48" fill="none"><rect x="10" y="10" width="28" height="28" rx="4" fill="#A2D9FF"/><rect x="14" y="20" width="20" height="3" fill="white"/><rect x="14" y="25" width="20" height="3" fill="white"/><circle cx="24" cy="15" r="2" fill="white"/></svg>
+                            <div class="style-name">Balanced</div>
+                        </div>
+                        <div class="style-option" onclick="selectStyle('luxury')">
+                            <svg class="style-icon" viewBox="0 0 48 48" fill="none"><path d="M24 8L28 20H40L30 28L34 40L24 32L14 40L18 28L8 20H20L24 8Z" fill="#FFD700"/></svg>
+                            <div class="style-name">Luxury</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">Create My Trip</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <h3 style="color:#333;font-size:1.8rem;margin-bottom:12px;">Crafting your perfect itinerary...</h3>
+        <p style="color:#666;font-size:1.1rem;">Finding the best hotels, restaurants and experiences</p>
+    </div>
+
+    <!-- Results -->
+    <div class="results" id="results"></div>
+
+    <script>
+        let selectedStyle = 'balanced';
+
+        function goHome() {
+            document.getElementById('landing').style.display = 'flex';
+            document.getElementById('formPage').style.display = 'none';
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('homeBtn').style.display = 'none';
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+
+        function showForm() {
+            document.getElementById('landing').style.display = 'none';
+            document.getElementById('formPage').style.display = 'block';
+            document.getElementById('homeBtn').style.display = 'block';
+        }
+
+        function selectStyle(style) {
+            selectedStyle = style;
+            document.querySelectorAll('.style-option').forEach(el => el.classList.remove('active'));
+            event.target.closest('.style-option').classList.add('active');
+        }
+
+        async function planTrip(e) {
+            e.preventDefault();
+
+            const data = {
+                city: document.getElementById('city').value,
+                country: document.getElementById('country').value,
+                budget: parseInt(document.getElementById('budget').value),
+                days: parseInt(document.getElementById('days').value),
+                travelers: parseInt(document.getElementById('travelers').value),
+                style: selectedStyle
+            };
+
+            document.getElementById('formPage').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const response = await fetch('/api/plan', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) throw new Error('Server error');
+
+                const result = await response.json();
+                displayResults(result);
+            } catch (error) {
+                alert('Error: ' + error.message);
+                document.getElementById('formPage').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            let html = `<div class="results-container">
+                <div class="results-header">
+                    <h2>${data.city} - ${data.days} Day Adventure</h2>
+                    <p>${data.travelers} travelers • ₹${data.budget.toLocaleString()} budget • ${data.style.charAt(0).toUpperCase()+data.style.slice(1)} style</p>
+                </div>`;
+
+            // Hotels
+            if (data.hotels && data.hotels.length > 0) {
+                html += `<div class="section">
+                    <h3 class="section-title">Hotels</h3>
+                    <div class="grid">`;
+                data.hotels.forEach(h => {
+                    html += `<div class="card">
+                        <div class="card-header">
+                            <div class="card-title">${h.name}</div>
+                            <div class="card-price">₹${h.price_inr}/night</div>
+                        </div>
+                        <div class="card-detail">📍 ${h.address}</div>
+                        <div class="card-detail" style="color:#FFB800;font-size:16px;margin:12px 0;">${'⭐'.repeat(h.stars)}</div>
+                        <div class="amenities">`;
+                    if (h.amenities) {
+                        h.amenities.slice(0,3).forEach(a => {
+                            const icon = a.toLowerCase().includes('wifi')?'📶':a.toLowerCase().includes('ac')?'❄️':a.toLowerCase().includes('breakfast')?'🍳':'✓';
+                            html += `<div class="amenity"><div class="amenity-icon">${icon}</div><div>${a}</div></div>`;
+                        });
+                    }
+                    html += `</div></div>`;
+                });
+                html += `</div></div>`;
+            }
+
+            // Restaurants
+            if (data.restaurants && data.restaurants.length > 0) {
+                html += `<div class="section">
+                    <h3 class="section-title">Restaurants</h3>
+                    <div class="grid">`;
+                data.restaurants.forEach(r => {
+                    html += `<div class="card">
+                        <div class="card-header">
+                            <div class="card-title">${r.name}</div>
+                            <div style="color:#10b981;font-weight:700;font-size:16px;">${r.price_range||'$$'}</div>
+                        </div>
+                        <div class="tag">${r.cuisine}</div>
+                        <div class="card-detail" style="font-weight:600;">Specialty: ${r.specialty||'Various dishes'}</div>
+                        <div class="card-detail" style="color:#FF9F68;font-weight:700;font-size:16px;margin-top:8px;">Avg: ₹${r.avg_cost_inr}</div>
+                    </div>`;
+                });
+                html += `</div></div>`;
+            }
+
+            // Attractions
+            if (data.attractions && data.attractions.length > 0) {
+                html += `<div class="section">
+                    <h3 class="section-title">Places to Visit</h3>
+                    <div class="grid">`;
+                data.attractions.forEach(a => {
+                    html += `<div class="card" style="border-left:5px solid #A2D9FF;">
+                        <div class="card-title" style="margin-bottom:12px;">${a.name}</div>
+                        <div class="card-detail">📍 ${a.address}</div>
+                        <div class="card-detail">💰 ${a.cost_inr === 0 ? 'Free Entry' : '₹'+a.cost_inr}</div>
+                        <div class="card-detail">⏱️ ${a.duration}</div>
+                        <div class="card-detail">🌅 Best time: ${a.best_time||'Anytime'}</div>
+                    </div>`;
+                });
+                html += `</div></div>`;
+            }
+
+            // TRANSPORT SECTION
+            if (data.transport) {
+                html += `<div class="section">
+                    <h3 class="section-title">Getting Around</h3>
+                    <div class="transport-grid">`;
+
+                if (data.transport.metro && data.transport.metro.available) {
+                    html += `<div class="transport-card">
+                        <div class="transport-icon">🚇</div>
+                        <div class="transport-name">Metro / Subway</div>
+                        <div class="transport-cost">₹${data.transport.metro.day_pass_inr}/day</div>
+                        ${data.transport.metro.lines?`<div class="transport-detail">${data.transport.metro.lines.join(', ')}</div>`:''}
+                    </div>`;
+                }
+
+                if (data.transport.bike && data.transport.bike.available) {
+                    html += `<div class="transport-card">
+                        <div class="transport-icon">🚲</div>
+                        <div class="transport-name">Bike Rental</div>
+                        <div class="transport-cost">₹${data.transport.bike.cost_per_day_inr}/day</div>
+                        ${data.transport.bike.company?`<div class="transport-detail">${data.transport.bike.company}</div>`:''}
+                    </div>`;
+                }
+
+                if (data.transport.car && data.transport.car.available) {
+                    html += `<div class="transport-card">
+                        <div class="transport-icon">🚗</div>
+                        <div class="transport-name">Car Rental</div>
+                        <div class="transport-cost">₹${data.transport.car.cost_per_day_inr}/day</div>
+                        <div class="transport-detail">Self-drive available</div>
+                    </div>`;
+                }
+
+                if (data.transport.taxi && data.transport.taxi.available) {
+                    html += `<div class="transport-card">
+                        <div class="transport-icon">🚕</div>
+                        <div class="transport-name">Taxi / Uber</div>
+                        <div class="transport-cost">~₹${data.transport.taxi.avg_cost_inr}</div>
+                        <div class="transport-detail">Average ride cost</div>
+                    </div>`;
+                }
+
+                if (data.transport.bus && data.transport.bus.available) {
+                    html += `<div class="transport-card">
+                        <div class="transport-icon">🚌</div>
+                        <div class="transport-name">Local Bus</div>
+                        <div class="transport-cost">₹${data.transport.bus.cost_per_ride_inr}/ride</div>
+                        <div class="transport-detail">Public transit</div>
+                    </div>`;
+                }
+
+                html += `</div></div>`;
+            }
+
+            // Itinerary
+            if (data.itinerary && data.itinerary.length > 0) {
+                html += `<div class="section">
+                    <h3 class="section-title">Day-by-Day Plan</h3>
+                    <div class="itinerary">`;
+                data.itinerary.forEach(day => {
+                    html += `<div class="day-section">
+                        <div class="day-badge">Day ${day.day}</div>
+                        <div>`;
+                    if (day.morning) {
+                        html += `<div class="timeline-item">
+                            <div class="timeline-time">☀️ Morning</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">${day.morning.activity}</div>
+                                ${day.morning.transport?`<div class="timeline-detail">🚇 ${day.morning.transport}</div>`:''}
+                            </div>
+                        </div>`;
+                    }
+                    if (day.lunch) {
+                        html += `<div class="timeline-item">
+                            <div class="timeline-time">🍽️ Lunch</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">${day.lunch.restaurant}</div>
+                                <div class="timeline-detail">₹${day.lunch.cost_inr}</div>
+                            </div>
+                        </div>`;
+                    }
+                    if (day.afternoon) {
+                        html += `<div class="timeline-item">
+                            <div class="timeline-time">🌤️ Afternoon</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">${day.afternoon.activity}</div>
+                                ${day.afternoon.transport?`<div class="timeline-detail">🚇 ${day.afternoon.transport}</div>`:''}
+                            </div>
+                        </div>`;
+                    }
+                    if (day.dinner) {
+                        html += `<div class="timeline-item">
+                            <div class="timeline-time">🌙 Dinner</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">${day.dinner.restaurant}</div>
+                                <div class="timeline-detail">₹${day.dinner.cost_inr}</div>
+                            </div>
+                        </div>`;
+                    }
+                    html += `</div></div>`;
+                });
+                html += `</div></div>`;
+            }
+
+            html += `</div>`;
+
+            document.getElementById('results').innerHTML = html;
+            document.getElementById('results').classList.add('show');
+            document.getElementById('homeBtn').style.display = 'block';
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+    </script>
+</body>
+</html>''';
+
+with open('static/index.html', 'w', encoding='utf-8') as f:
+    f.write(html)
+
+print("✅ Professional UI created!")
